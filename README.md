@@ -1,68 +1,68 @@
-# Arrangit - Gestor de Tareas del Proyecto
+# Arrangit - Project Task Manager
 
-Un gestor de tareas simple para proyectos, que guarda toda la información en `.arrangit.json`.
+A simple task manager for projects that stores all information in `.arrangit.json`.
 
-## Instalación
+## Installation
 
-1. Clona o copia el proyecto
-2. Asegúrate de que el script `arrangit` sea ejecutable:
+1. Clone or copy the project
+2. Make sure the `arrangit` script is executable:
    ```bash
    chmod +x arrangit
    ```
 
-## Configuración de Autocompletado
+## Autocompletion Setup
 
-Para habilitar el autocompletado con TAB, añade esto a tu `.bashrc` o `.zshrc`:
+To enable TAB autocompletion, add this to your `.bashrc` or `.zshrc`:
 
 ```bash
-source /ruta/completa/a/arrangit/completions.sh
+source /full/path/to/arrangit/completions.sh
 ```
 
-## Uso
+## Usage
 
-### Comandos Disponibles
+### Available Commands
 
-- `./arrangit list` - Listar todas las tareas
-- `./arrangit task "nombre"` - Crear o seleccionar tarea
-- `./arrangit subtask "nombre"` - Crear o seleccionar subtarea
-- `./arrangit active` - Mostrar tarea activa
-- `./arrangit done "nombre"` - Marcar tarea como completada
-- `./arrangit delete "nombre"` - Eliminar tarea
+- `./arrangit list` - List all tasks
+- `./arrangit task "name"` - Create or select task
+- `./arrangit subtask "name"` - Create or select subtask
+- `./arrangit active` - Show active task
+- `./arrangit done "name"` - Mark task as completed
+- `./arrangit delete "name"` - Delete task
 
-### Ejemplos
+### Examples
 
 ```bash
-# Crear una nueva tarea
-./arrangit task "Desarrollar API" -d "Crear endpoints para usuarios"
+# Create a new task
+./arrangit task "Develop API" -d "Create user endpoints"
 
-# Crear una subtarea (seleccionarás la tarea padre)
-./arrangit subtask "Autenticación"
+# Create a subtask (you'll select the parent task)
+./arrangit subtask "Authentication"
 
-# Marcar tarea como completada
-./arrangit done "Desarrollar API"
+# Mark task as completed
+./arrangit done "Develop API"
 
-# Eliminar tarea
-./arrangit delete "Tarea antigua"
+# Delete task
+./arrangit delete "Old task"
 
-# Ver tarea activa
+# View active task
 ./arrangit active
 
-# Listar todas las tareas
+# List all tasks
 ./arrangit list
 ```
 
-## Características
+## Features
 
-- **Búsqueda por nombre**: No necesitas recordar IDs
-- **Autocompletado**: Usa TAB para completar nombres de tareas
-- **Subtareas**: Crea jerarquías de tareas
-- **Tarea activa**: Siempre hay una tarea activa para trabajar
-- **Persistencia**: Todo se guarda automáticamente en `.arrangit.json`
+- **Name-based search**: No need to remember IDs
+- **Autocompletion**: Use TAB to complete task names
+- **Subtasks**: Create task hierarchies
+- **Active task**: Always have an active task to work on
+- **Persistence**: Everything is automatically saved in `.arrangit.json`
 
-## Estructura de Archivos
+## File Structure
 
-- `src/` - Código fuente del programa
-- `.arrangit.json` - Base de datos de tareas
-- `arrangit` - Script principal
-- `completions.sh` - Script de autocompletado
+- `src/` - Program source code
+- `.arrangit.json` - Task database
+- `arrangit` - Main script
+- `completions.sh` - Autocompletion script
 

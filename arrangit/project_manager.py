@@ -16,7 +16,7 @@ class ProjectManager:
     def initialize_project(self):
         """Initialize a new project with empty configuration"""
         if os.path.exists(self.config_file):
-            raise FileExistsError(f"El archivo {self.config_file} ya existe")
+            raise FileExistsError(f"File {self.config_file} already exists")
         
         data = {
             "project_name": "arrangit",
@@ -33,7 +33,7 @@ class ProjectManager:
 
     def load_project(self):
         if not os.path.exists(self.config_file):
-            raise FileNotFoundError(f"No se encontró {self.config_file}. Ejecuta desde un proyecto válido.")
+            raise FileNotFoundError(f"{self.config_file} not found. Run from a valid project.")
         
         with open(self.config_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -67,7 +67,7 @@ class ProjectManager:
 
     def set_active_task(self, task_id: str):
         if task_id not in self.tasks:
-            raise ValueError(f"Tarea con ID {task_id} no encontrada")
+            raise ValueError(f"Task with ID {task_id} not found")
         
         self.active_task = task_id
         self.save_project()

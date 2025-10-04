@@ -1,2 +1,2 @@
-# Gestor de tareas para proyectos
-# No se requieren dependencias externas
+# Project task manager
+# No external dependencies required
