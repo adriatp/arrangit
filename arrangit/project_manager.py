@@ -9,7 +9,7 @@ class ProjectManager:
         self.project_path = project_path
         self.config_file = os.path.join(project_path, ".arrangit.json")
         self.tasks: Dict[str, Task] = {}
-        self.active_task: Optional[str] = None
+        self.active_tasks: List[str] = []
         
         # Don't load project automatically - let CLI handle initialization
 
@@ -21,7 +21,7 @@ class ProjectManager:
         data = {
             "project_name": "arrangit",
             "tasks": {},
-            "active_task": None,
+            "active_tasks": [],
             "created_at": __import__("datetime").datetime.now().isoformat()
         }
         
@@ -42,13 +42,18 @@ class ProjectManager:
         for task_id, task_data in data.get("tasks", {}).items():
             self.tasks[task_id] = Task.from_dict(task_data)
         
-        self.active_task = data.get("active_task")
+        # Handle migration from single active_task to active_tasks list
+        old_active_task = data.get("active_task")
+        if old_active_task:
+            self.active_tasks = [old_active_task]
+        else:
+            self.active_tasks = data.get("active_tasks", [])
 
     def save_project(self):
         data = {
             "project_name": "arrangit",
             "tasks": {task_id: task.to_dict() for task_id, task in self.tasks.items()},
-            "active_task": self.active_task,
+            "active_tasks": self.active_tasks,
             "updated_at": __import__("datetime").datetime.now().isoformat()
         }
         
@@ -65,17 +70,62 @@ class ProjectManager:
         self.save_project()
         return task.id
 
-    def set_active_task(self, task_id: str):
+    def add_active_task(self, task_id: str):
         if task_id not in self.tasks:
             raise ValueError(f"Task with ID {task_id} not found")
         
-        self.active_task = task_id
-        self.save_project()
+        if task_id not in self.active_tasks:
+            self.active_tasks.append(task_id)
+            self.save_project()
 
-    def get_active_task(self) -> Optional[Task]:
-        if self.active_task:
-            return self.tasks.get(self.active_task)
-        return None
+    def remove_active_task(self, task_id: str):
+        if task_id in self.active_tasks:
+            self.active_tasks.remove(task_id)
+            self.save_project()
+
+    def get_active_tasks(self) -> List[Task]:
+        return [self.tasks[task_id] for task_id in self.active_tasks if task_id in self.tasks]
+
+    def get_inactive_tasks(self) -> List[Task]:
+        return [task for task in self.tasks.values() if task.id not in self.active_tasks and not task.completed]
+
+    def get_active_tasks_hierarchically(self) -> List[tuple[Task, int]]:
+        """Get active tasks with their hierarchical structure including parent tasks"""
+        # Get all tasks that are active or are parents of active tasks
+        relevant_tasks = set()
+        
+        def add_task_and_parents(task_id: str):
+            """Add task and all its parents to relevant_tasks"""
+            task = self.get_task(task_id)
+            if task and task.id not in relevant_tasks:
+                relevant_tasks.add(task.id)
+                if task.parent_id:
+                    add_task_and_parents(task.parent_id)
+        
+        # Add all active tasks and their parents
+        for task_id in self.active_tasks:
+            add_task_and_parents(task_id)
+        
+        # Build hierarchical structure
+        all_tasks = []
+        
+        def add_task_and_subtasks(task: Task, level: int = 0):
+            """Add task and its subtasks to the list if they are relevant"""
+            if task.id in relevant_tasks:
+                all_tasks.append((task, level))
+                
+                # Add subtasks that are relevant
+                for subtask_id in task.subtasks:
+                    if subtask_id in self.tasks and self.tasks[subtask_id].id in relevant_tasks:
+                        add_task_and_subtasks(self.tasks[subtask_id], level + 1)
+        
+        # Start from root tasks
+        root_tasks = [task for task in self.tasks.values() if not task.parent_id]
+        
+        for root_task in root_tasks:
+            add_task_and_subtasks(root_task)
+        
+        return all_tasks
 
     def get_task(self, task_id: str) -> Optional[Task]:
         return self.tasks.get(task_id)
@@ -156,6 +206,10 @@ class ProjectManager:
         if task_id in self.tasks:
             self.tasks[task_id].completed = True
             
+            # Remove from active tasks
+            if task_id in self.active_tasks:
+                self.active_tasks.remove(task_id)
+            
             # Mark all subtasks as completed recursively
             for subtask_id in self.tasks[task_id].subtasks:
                 if subtask_id in self.tasks:
@@ -186,8 +240,8 @@ class ProjectManager:
                 if task_id in parent.subtasks:
                     parent.subtasks.remove(task_id)
             
-            if self.active_task == task_id:
-                self.active_task = None
+            if task_id in self.active_tasks:
+                self.active_tasks.remove(task_id)
             
             del self.tasks[task_id]
             self.save_project()

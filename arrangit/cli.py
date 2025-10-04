@@ -35,6 +35,12 @@ def main():
     undone_parser = subparsers.add_parser('undone', help='Mark task as not completed')
     undone_parser.add_argument('name', nargs='?', help='Task name (optional)')
 
+    take_parser = subparsers.add_parser('take', help='Activate a task')
+    take_parser.add_argument('name', nargs='?', help='Task name to activate (optional)')
+
+    untake_parser = subparsers.add_parser('untake', help='Deactivate a task')
+    untake_parser.add_argument('name', nargs='?', help='Task name to deactivate (optional)')
+
     args = parser.parse_args()
 
     if not args.command:
@@ -73,7 +79,7 @@ def main():
             print("-" * 50)
             
             for task, level in hierarchical_tasks:
-                if task.id == manager.active_task:
+                if task.id in manager.active_tasks:
                     status = "*"
                 else:
                     status = "✓" if task.completed else "◯"
@@ -86,19 +92,19 @@ def main():
             existing_task = manager.find_task_by_name(args.name)
             
             if existing_task:
-                manager.set_active_task(existing_task.id)
-                print(f"Active task: {existing_task.title}")
+                manager.add_active_task(existing_task.id)
+                print(f"Task activated: {existing_task.title}")
             else:
                 task_id = manager.create_task(args.name, args.description)
-                manager.set_active_task(task_id)
-                print(f"Task created and active: {args.name}")
+                manager.add_active_task(task_id)
+                print(f"Task created and activated: {args.name}")
 
         elif args.command == 'subtask':
             existing_task = manager.find_task_by_name(args.name)
             
             if existing_task:
-                manager.set_active_task(existing_task.id)
-                print(f"Active subtask: {existing_task.title}")
+                manager.add_active_task(existing_task.id)
+                print(f"Subtask activated: {existing_task.title}")
             else:
                 hierarchical_tasks = manager.get_tasks_hierarchically()
                 
@@ -109,7 +115,7 @@ def main():
                 print("\nAvailable tasks for subtask:")
                 print("-" * 50)
                 for i, (task, level) in enumerate(hierarchical_tasks, 1):
-                    if task.id == manager.active_task:
+                    if task.id in manager.active_tasks:
                         status = "*"
                     else:
                         status = "✓" if task.completed else "◯"
@@ -123,21 +129,30 @@ def main():
                     if 0 <= parent_index < len(hierarchical_tasks):
                         parent_task, _ = hierarchical_tasks[parent_index]
                         task_id = manager.create_task(args.name, "", parent_task.id)
-                        manager.set_active_task(task_id)
-                        print(f"Subtask created and active: {args.name} (of {parent_task.title})")
+                        manager.add_active_task(task_id)
+                        print(f"Subtask created and activated: {args.name} (of {parent_task.title})")
                     else:
                         print("Invalid selection")
                 except (ValueError, KeyboardInterrupt):
                     print("\nOperation cancelled")
 
         elif args.command == 'active':
-            active_task = manager.get_active_task()
-            if active_task:
-                print(f"Active task: {active_task.title}")
-                if active_task.description:
-                    print(f"Description: {active_task.description}")
-            else:
-                print("No active task")
+            hierarchical_tasks = manager.get_active_tasks_hierarchically()
+            if not hierarchical_tasks:
+                print("No active tasks")
+                return
+            
+            print("\nActive tasks:")
+            print("-" * 50)
+            for task, level in hierarchical_tasks:
+                if task.id in manager.active_tasks:
+                    status = "*"
+                else:
+                    status = "✓" if task.completed else "◯"
+                indent = "  " * level
+                print(f"  {status} {indent}{task.title} [{task.id[:8]}]")
+                if task.description:
+                    print(f"     {indent}{task.description}")
 
         elif args.command == 'done':
             if args.name:
@@ -148,16 +163,16 @@ def main():
                 else:
                     print(f"Task '{args.name}' not found")
             else:
-                hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True)
+                hierarchical_tasks = manager.get_tasks_hierarchically()
                 if not hierarchical_tasks:
-                    print("No tasks in the project")
+                    print("No incomplete tasks in the project")
                     return
 
                 print("\nAvailable tasks to mark as completed:")
                 print("-" * 50)
                 
                 for i, (task, level) in enumerate(hierarchical_tasks, 1):
-                    if task.id == manager.active_task:
+                    if task.id in manager.active_tasks:
                         status = "*"
                     else:
                         status = "✓" if task.completed else "◯"
@@ -195,7 +210,7 @@ def main():
                 print("-" * 50)
                 
                 for i, task in enumerate(tasks, 1):
-                    if task.id == manager.active_task:
+                    if task.id in manager.active_tasks:
                         status = "*"
                     else:
                         status = "✓" if task.completed else "◯"
@@ -231,7 +246,7 @@ def main():
                 print("-" * 50)
                 
                 for i, task in enumerate(tasks, 1):
-                    if task.id == manager.active_task:
+                    if task.id in manager.active_tasks:
                         status = "*"
                     else:
                         status = "✓" if task.completed else "◯"
@@ -281,7 +296,7 @@ def main():
                 if is_descendant(task.id, parent_task.id):
                     continue
                 
-                if parent_task.id == manager.active_task:
+                if parent_task.id in manager.active_tasks:
                     status = "*"
                 else:
                     status = "✓" if parent_task.completed else "◯"
@@ -325,7 +340,7 @@ def main():
                 print("-" * 50)
                 
                 for i, (task, level) in enumerate(hierarchical_tasks, 1):
-                    if task.id == manager.active_task:
+                    if task.id in manager.active_tasks:
                         status = "*"
                     else:
                         status = "✓" if task.completed else "◯"
@@ -340,6 +355,79 @@ def main():
                         task, _ = hierarchical_tasks[task_index]
                         manager.uncomplete_task(task.id)
                         print(f"Task marked as not completed: {task.title}")
+                    else:
+                        print("Invalid selection")
+                except (ValueError, KeyboardInterrupt):
+                    print("\nOperation cancelled")
+
+        elif args.command == 'take':
+            if args.name:
+                task = manager.find_task_by_name(args.name)
+                if task:
+                    if task.completed:
+                        print(f"Cannot activate completed task: {task.title}")
+                    else:
+                        manager.add_active_task(task.id)
+                        print(f"Task activated: {task.title}")
+                else:
+                    print(f"Task '{args.name}' not found")
+            else:
+                inactive_tasks = manager.get_inactive_tasks()
+                if not inactive_tasks:
+                    print("No inactive tasks in the project")
+                    return
+
+                print("\nAvailable tasks to activate:")
+                print("-" * 50)
+                
+                for i, task in enumerate(inactive_tasks, 1):
+                    status = "✓" if task.completed else "◯"
+                    indent = "  " if task.parent_id else ""
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
+                
+                try:
+                    choice = input("\nSelect the task number to activate: ")
+                    task_index = int(choice) - 1
+                    
+                    if 0 <= task_index < len(inactive_tasks):
+                        task = inactive_tasks[task_index]
+                        manager.add_active_task(task.id)
+                        print(f"Task activated: {task.title}")
+                    else:
+                        print("Invalid selection")
+                except (ValueError, KeyboardInterrupt):
+                    print("\nOperation cancelled")
+
+        elif args.command == 'untake':
+            if args.name:
+                task = manager.find_task_by_name(args.name)
+                if task:
+                    manager.remove_active_task(task.id)
+                    print(f"Task deactivated: {task.title}")
+                else:
+                    print(f"Task '{args.name}' not found")
+            else:
+                active_tasks = manager.get_active_tasks()
+                if not active_tasks:
+                    print("No active tasks in the project")
+                    return
+
+                print("\nAvailable tasks to deactivate:")
+                print("-" * 50)
+                
+                for i, task in enumerate(active_tasks, 1):
+                    status = "✓" if task.completed else "◯"
+                    indent = "  " if task.parent_id else ""
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
+                
+                try:
+                    choice = input("\nSelect the task number to deactivate: ")
+                    task_index = int(choice) - 1
+                    
+                    if 0 <= task_index < len(active_tasks):
+                        task = active_tasks[task_index]
+                        manager.remove_active_task(task.id)
+                        print(f"Task deactivated: {task.title}")
                     else:
                         print("Invalid selection")
                 except (ValueError, KeyboardInterrupt):
