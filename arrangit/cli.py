@@ -10,7 +10,9 @@ def main():
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
     subparsers.add_parser('init', help='Initialize a new project')
-    subparsers.add_parser('list', help='List all tasks')
+    list_parser = subparsers.add_parser('list', help='List tasks')
+    list_parser.add_argument('--done', action='store_true', help='Show only completed tasks')
+    list_parser.add_argument('--all', action='store_true', help='Show all tasks including completed')
     
     task_parser = subparsers.add_parser('task', help='Create or select task')
     task_parser.add_argument('name', help='Task name')
@@ -30,6 +32,9 @@ def main():
     move_parser = subparsers.add_parser('move', help='Move task to different parent')
     move_parser.add_argument('name', nargs='?', help='Task name to move (optional)')
 
+    undone_parser = subparsers.add_parser('undone', help='Mark task as not completed')
+    undone_parser.add_argument('name', nargs='?', help='Task name (optional)')
+
     args = parser.parse_args()
 
     if not args.command:
@@ -46,19 +51,34 @@ def main():
         manager.load_project()
         
         if args.command == 'list':
-            hierarchical_tasks = manager.get_tasks_hierarchically()
+            hierarchical_tasks = manager.get_tasks_hierarchically(
+                show_completed=args.done, 
+                show_all=args.all
+            )
             if not hierarchical_tasks:
-                print("No tasks in the project")
+                if args.done:
+                    print("No completed tasks in the project")
+                elif args.all:
+                    print("No tasks in the project")
+                else:
+                    print("No incomplete tasks in the project")
                 return
 
-            print("\nProject tasks:")
+            if args.done:
+                print("\nCompleted tasks:")
+            elif args.all:
+                print("\nAll tasks:")
+            else:
+                print("\nIncomplete tasks:")
             print("-" * 50)
             
             for task, level in hierarchical_tasks:
-                status = "✓" if task.completed else "◯"
-                active = "*" if task.id == manager.active_task else " "
+                if task.id == manager.active_task:
+                    status = "*"
+                else:
+                    status = "✓" if task.completed else "◯"
                 indent = "  " * level
-                print(f"{active} {status} {indent}{task.title} [{task.id[:8]}]")
+                print(f"  {status} {indent}{task.title} [{task.id[:8]}]")
                 if task.description:
                     print(f"     {indent}{task.description}")
 
@@ -89,10 +109,12 @@ def main():
                 print("\nAvailable tasks for subtask:")
                 print("-" * 50)
                 for i, (task, level) in enumerate(hierarchical_tasks, 1):
-                    status = "✓" if task.completed else "◯"
-                    active = "*" if task.id == manager.active_task else " "
+                    if task.id == manager.active_task:
+                        status = "*"
+                    else:
+                        status = "✓" if task.completed else "◯"
                     indent = "  " * level
-                    print(f"{i}. {active} {status} {indent}{task.title} [{task.id[:8]}]")
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
                 
                 try:
                     choice = input("\nSelect the parent task number: ")
@@ -126,26 +148,28 @@ def main():
                 else:
                     print(f"Task '{args.name}' not found")
             else:
-                tasks = manager.get_all_tasks()
-                if not tasks:
+                hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True)
+                if not hierarchical_tasks:
                     print("No tasks in the project")
                     return
 
                 print("\nAvailable tasks to mark as completed:")
                 print("-" * 50)
                 
-                for i, task in enumerate(tasks, 1):
-                    status = "✓" if task.completed else "◯"
-                    active = "*" if task.id == manager.active_task else " "
-                    indent = "  " if task.parent_id else ""
-                    print(f"{i}. {active} {status} {indent}{task.title} [{task.id[:8]}]")
+                for i, (task, level) in enumerate(hierarchical_tasks, 1):
+                    if task.id == manager.active_task:
+                        status = "*"
+                    else:
+                        status = "✓" if task.completed else "◯"
+                    indent = "  " * level
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
                 
                 try:
                     choice = input("\nSelect the task number to complete: ")
                     task_index = int(choice) - 1
                     
-                    if 0 <= task_index < len(tasks):
-                        task = tasks[task_index]
+                    if 0 <= task_index < len(hierarchical_tasks):
+                        task, _ = hierarchical_tasks[task_index]
                         manager.complete_task(task.id)
                         print(f"Task completed: {task.title}")
                     else:
@@ -171,10 +195,12 @@ def main():
                 print("-" * 50)
                 
                 for i, task in enumerate(tasks, 1):
-                    status = "✓" if task.completed else "◯"
-                    active = "*" if task.id == manager.active_task else " "
+                    if task.id == manager.active_task:
+                        status = "*"
+                    else:
+                        status = "✓" if task.completed else "◯"
                     indent = "  " if task.parent_id else ""
-                    print(f"{i}. {active} {status} {indent}{task.title} [{task.id[:8]}]")
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
                 
                 try:
                     choice = input("\nSelect the task number to delete: ")
@@ -205,10 +231,12 @@ def main():
                 print("-" * 50)
                 
                 for i, task in enumerate(tasks, 1):
-                    status = "✓" if task.completed else "◯"
-                    active = "*" if task.id == manager.active_task else " "
+                    if task.id == manager.active_task:
+                        status = "*"
+                    else:
+                        status = "✓" if task.completed else "◯"
                     indent = "  " if task.parent_id else ""
-                    print(f"{i}. {active} {status} {indent}{task.title} [{task.id[:8]}]")
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
                 
                 try:
                     choice = input("\nSelect the task number to move: ")
@@ -253,10 +281,12 @@ def main():
                 if is_descendant(task.id, parent_task.id):
                     continue
                 
-                status = "✓" if parent_task.completed else "◯"
-                active = "*" if parent_task.id == manager.active_task else " "
+                if parent_task.id == manager.active_task:
+                    status = "*"
+                else:
+                    status = "✓" if parent_task.completed else "◯"
                 indent = "  " * level
-                print(f"{parent_counter}. {active} {status} {indent}{parent_task.title} [{parent_task.id[:8]}]")
+                print(f"{parent_counter}.  {status} {indent}{parent_task.title} [{parent_task.id[:8]}]")
                 available_parents.append(parent_task)
                 parent_counter += 1
             
@@ -276,6 +306,44 @@ def main():
                     print("Invalid selection")
             except (ValueError, KeyboardInterrupt):
                 print("\nOperation cancelled")
+
+        elif args.command == 'undone':
+            if args.name:
+                task = manager.find_task_by_name(args.name)
+                if task:
+                    manager.uncomplete_task(task.id)
+                    print(f"Task marked as not completed: {task.title}")
+                else:
+                    print(f"Task '{args.name}' not found")
+            else:
+                hierarchical_tasks = manager.get_tasks_hierarchically(show_completed=True)
+                if not hierarchical_tasks:
+                    print("No completed tasks in the project")
+                    return
+
+                print("\nAvailable tasks to mark as not completed:")
+                print("-" * 50)
+                
+                for i, (task, level) in enumerate(hierarchical_tasks, 1):
+                    if task.id == manager.active_task:
+                        status = "*"
+                    else:
+                        status = "✓" if task.completed else "◯"
+                    indent = "  " * level
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
+                
+                try:
+                    choice = input("\nSelect the task number to mark as not completed: ")
+                    task_index = int(choice) - 1
+                    
+                    if 0 <= task_index < len(hierarchical_tasks):
+                        task, _ = hierarchical_tasks[task_index]
+                        manager.uncomplete_task(task.id)
+                        print(f"Task marked as not completed: {task.title}")
+                    else:
+                        print("Invalid selection")
+                except (ValueError, KeyboardInterrupt):
+                    print("\nOperation cancelled")
 
     except Exception as e:
         print(f"Error: {e}")

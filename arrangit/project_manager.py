@@ -96,6 +96,9 @@ class ProjectManager:
     def get_incomplete_tasks(self) -> List[Task]:
         return [task for task in self.tasks.values() if not task.completed]
 
+    def get_completed_tasks(self) -> List[Task]:
+        return [task for task in self.tasks.values() if task.completed]
+
     def get_all_tasks(self) -> List[Task]:
         return list(self.tasks.values())
 
@@ -106,13 +109,40 @@ class ProjectManager:
         
         return [self.tasks[subtask_id] for subtask_id in parent.subtasks if subtask_id in self.tasks]
 
-    def get_tasks_hierarchically(self) -> List[tuple[Task, int]]:
-        """Get all tasks in hierarchical order (parent tasks first, then subtasks)"""
+    def get_tasks_hierarchically(self, show_completed: bool = False, show_all: bool = False) -> List[tuple[Task, int]]:
+        """Get tasks in hierarchical order (parent tasks first, then subtasks)
+        
+        Args:
+            show_completed: If True, show structure with completed tasks highlighted
+            show_all: If True, show all tasks regardless of completion status
+        """
+        # Always start with all root tasks to maintain structure
         root_tasks = [task for task in self.tasks.values() if not task.parent_id]
+        
         all_tasks = []
         
         def add_task_and_subtasks(task: Task, level: int = 0):
+            # For show_completed mode, only add tasks that are completed or have completed descendants
+            if show_completed:
+                # Check if this task or any of its descendants are completed
+                def has_completed_descendants(t: Task) -> bool:
+                    if t.completed:
+                        return True
+                    for subtask_id in t.subtasks:
+                        if subtask_id in self.tasks:
+                            if has_completed_descendants(self.tasks[subtask_id]):
+                                return True
+                    return False
+                
+                if not has_completed_descendants(task):
+                    return
+            elif not show_all and task.completed:
+                # For default mode, skip completed tasks
+                return
+            
             all_tasks.append((task, level))
+            
+            # Always add all subtasks to maintain structure
             for subtask_id in task.subtasks:
                 if subtask_id in self.tasks:
                     add_task_and_subtasks(self.tasks[subtask_id], level + 1)
@@ -130,6 +160,17 @@ class ProjectManager:
             for subtask_id in self.tasks[task_id].subtasks:
                 if subtask_id in self.tasks:
                     self.complete_task(subtask_id)
+            
+            self.save_project()
+
+    def uncomplete_task(self, task_id: str):
+        if task_id in self.tasks:
+            self.tasks[task_id].completed = False
+            
+            # Mark all subtasks as uncompleted recursively
+            for subtask_id in self.tasks[task_id].subtasks:
+                if subtask_id in self.tasks:
+                    self.uncomplete_task(subtask_id)
             
             self.save_project()
 
