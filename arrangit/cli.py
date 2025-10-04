@@ -27,6 +27,9 @@ def main():
     delete_parser = subparsers.add_parser('delete', help='Delete task')
     delete_parser.add_argument('name', nargs='?', help='Task name (optional)')
 
+    move_parser = subparsers.add_parser('move', help='Move task to different parent')
+    move_parser.add_argument('name', nargs='?', help='Task name to move (optional)')
+
     args = parser.parse_args()
 
     if not args.command:
@@ -185,6 +188,94 @@ def main():
                         print("Invalid selection")
                 except (ValueError, KeyboardInterrupt):
                     print("\nOperation cancelled")
+
+        elif args.command == 'move':
+            if args.name:
+                task = manager.find_task_by_name(args.name)
+                if not task:
+                    print(f"Task '{args.name}' not found")
+                    return
+            else:
+                tasks = manager.get_all_tasks()
+                if not tasks:
+                    print("No tasks in the project")
+                    return
+
+                print("\nAvailable tasks to move:")
+                print("-" * 50)
+                
+                for i, task in enumerate(tasks, 1):
+                    status = "✓" if task.completed else "◯"
+                    active = "*" if task.id == manager.active_task else " "
+                    indent = "  " if task.parent_id else ""
+                    print(f"{i}. {active} {status} {indent}{task.title} [{task.id[:8]}]")
+                
+                try:
+                    choice = input("\nSelect the task number to move: ")
+                    task_index = int(choice) - 1
+                    
+                    if 0 <= task_index < len(tasks):
+                        task = tasks[task_index]
+                    else:
+                        print("Invalid selection")
+                        return
+                except (ValueError, KeyboardInterrupt):
+                    print("\nOperation cancelled")
+                    return
+
+            # Select new parent
+            hierarchical_tasks = manager.get_tasks_hierarchically()
+            
+            print(f"\nMoving task: {task.title}")
+            print("\nSelect new parent (0 for root level):")
+            print("-" * 50)
+            print("0. Root level (no parent)")
+            
+            available_parents = []
+            parent_counter = 1
+            for parent_task, level in hierarchical_tasks:
+                # Skip the task being moved and its descendants
+                if parent_task.id == task.id:
+                    continue
+                
+                # Check if parent_task is a descendant of task
+                def is_descendant(parent_id: str, child_id: str) -> bool:
+                    parent = manager.get_task(parent_id)
+                    if not parent:
+                        return False
+                    for subtask_id in parent.subtasks:
+                        if subtask_id == child_id:
+                            return True
+                        if is_descendant(subtask_id, child_id):
+                            return True
+                    return False
+                
+                if is_descendant(task.id, parent_task.id):
+                    continue
+                
+                status = "✓" if parent_task.completed else "◯"
+                active = "*" if parent_task.id == manager.active_task else " "
+                indent = "  " * level
+                print(f"{parent_counter}. {active} {status} {indent}{parent_task.title} [{parent_task.id[:8]}]")
+                available_parents.append(parent_task)
+                parent_counter += 1
+            
+            try:
+                choice = input("\nSelect the new parent number: ")
+                parent_index = int(choice)
+                
+                if parent_index == 0:
+                    # Move to root level
+                    manager.move_task(task.id, None)
+                    print(f"Task moved to root level: {task.title}")
+                elif 1 <= parent_index <= len(available_parents):
+                    parent_task = available_parents[parent_index - 1]
+                    manager.move_task(task.id, parent_task.id)
+                    print(f"Task moved to: {parent_task.title}")
+                else:
+                    print("Invalid selection")
+            except (ValueError, KeyboardInterrupt):
+                print("\nOperation cancelled")
 
     except Exception as e:
         print(f"Error: {e}")

@@ -150,3 +150,50 @@ class ProjectManager:
             
             del self.tasks[task_id]
             self.save_project()
+
+    def move_task(self, task_id: str, new_parent_id: Optional[str] = None):
+        """Move a task to a new parent (None for root level)"""
+        if task_id not in self.tasks:
+            raise ValueError(f"Task with ID {task_id} not found")
+        
+        task = self.tasks[task_id]
+        
+        # Check if moving to itself or creating a circular dependency
+        if new_parent_id == task_id:
+            raise ValueError("Cannot move task to itself")
+        
+        if new_parent_id:
+            if new_parent_id not in self.tasks:
+                raise ValueError(f"Parent task with ID {new_parent_id} not found")
+            
+            # Check for circular dependency
+            def is_descendant(parent_id: str, child_id: str) -> bool:
+                parent = self.tasks.get(parent_id)
+                if not parent:
+                    return False
+                for subtask_id in parent.subtasks:
+                    if subtask_id == child_id:
+                        return True
+                    if is_descendant(subtask_id, child_id):
+                        return True
+                return False
+            
+            if is_descendant(task_id, new_parent_id):
+                raise ValueError("Cannot move task to its own descendant")
+        
+        # Remove from current parent
+        if task.parent_id and task.parent_id in self.tasks:
+            current_parent = self.tasks[task.parent_id]
+            if task_id in current_parent.subtasks:
+                current_parent.subtasks.remove(task_id)
+        
+        # Add to new parent
+        if new_parent_id:
+            new_parent = self.tasks[new_parent_id]
+            new_parent.add_subtask(task_id)
+            task.parent_id = new_parent_id
+        else:
+            task.parent_id = None
+        
+        task.updated_at = __import__("datetime").datetime.now().isoformat()
+        self.save_project()
