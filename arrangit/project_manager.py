@@ -127,6 +127,45 @@ class ProjectManager:
         
         return all_tasks
 
+    def get_takeable_tasks_hierarchically(self) -> List[tuple[Task, int, bool]]:
+        """Get tasks that can be activated with hierarchical structure
+        Returns list of (task, level, can_take)"""
+        # Get only incomplete and inactive tasks
+        hierarchical_tasks = self.get_tasks_hierarchically(show_all=False)
+        result = []
+        
+        for task, level in hierarchical_tasks:
+            # Task can be taken if it's not completed and not already active
+            can_take = not task.completed and task.id not in self.active_tasks
+            result.append((task, level, can_take))
+        
+        return result
+
+    def get_untakeable_tasks_hierarchically(self) -> List[tuple[Task, int, bool]]:
+        """Get tasks that can be deactivated with hierarchical structure
+        Returns list of (task, level, can_untake)"""
+        # Get only active tasks and their parents up to root
+        hierarchical_tasks = self.get_active_tasks_hierarchically()
+        result = []
+        
+        for task, level in hierarchical_tasks:
+            # Task can be untaken if it's currently active
+            can_untake = task.id in self.active_tasks
+            result.append((task, level, can_untake))
+        
+        return result
+
+    def get_completed_tasks_hierarchically(self) -> List[tuple[Task, int]]:
+        """Get only completed tasks with hierarchical structure"""
+        hierarchical_tasks = self.get_tasks_hierarchically(show_all=True)
+        result = []
+        
+        for task, level in hierarchical_tasks:
+            if task.completed:
+                result.append((task, level))
+        
+        return result
+
     def get_task(self, task_id: str) -> Optional[Task]:
         return self.tasks.get(task_id)
 
