@@ -1,0 +1,2 @@
+# Gestor de tareas para proyectos
+# No se requieren dependencias externas
