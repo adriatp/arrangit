@@ -43,21 +43,21 @@ def main():
         manager.load_project()
         
         if args.command == 'list':
-            tasks = manager.get_all_tasks()
-            if not tasks:
+            hierarchical_tasks = manager.get_tasks_hierarchically()
+            if not hierarchical_tasks:
                 print("No tasks in the project")
                 return
 
             print("\nProject tasks:")
             print("-" * 50)
             
-            for task in tasks:
+            for task, level in hierarchical_tasks:
                 status = "✓" if task.completed else "◯"
                 active = "*" if task.id == manager.active_task else " "
-                indent = "  " if task.parent_id else ""
+                indent = "  " * level
                 print(f"{active} {status} {indent}{task.title} [{task.id[:8]}]")
                 if task.description:
-                    print(f"     {task.description}")
+                    print(f"     {indent}{task.description}")
 
         elif args.command == 'task':
             existing_task = manager.find_task_by_name(args.name)
