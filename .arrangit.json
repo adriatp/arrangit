@@ -1,0 +1,313 @@
+{
+  "project_name": "arrangit",
+  "tasks": {
+    "c8b17215-8eeb-420d-9d27-ee118ef021ec": {
+      "id": "c8b17215-8eeb-420d-9d27-ee118ef021ec",
+      "title": "Tarea Principal",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [],
+      "created_at": "2025-10-04T19:15:15.029798",
+      "updated_at": "2025-10-06T20:32:09.210587",
+      "completed": true,
+      "clean": true,
+      "completed_at": null,
+      "cleaned_at": "2025-10-06T20:32:09.210585"
+    },
+    "221b87c0-258c-4535-b3f0-7583f65d94ca": {
+      "id": "221b87c0-258c-4535-b3f0-7583f65d94ca",
+      "title": "Subtarea 1",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [],
+      "created_at": "2025-10-04T19:16:22.460611",
+      "updated_at": "2025-10-06T20:34:37.104756",
+      "completed": true,
+      "clean": true,
+      "completed_at": null,
+      "cleaned_at": "2025-10-06T20:34:37.104755"
+    },
+    "90dc715f-8d54-4904-839d-89e79e546220": {
+      "id": "90dc715f-8d54-4904-839d-89e79e546220",
+      "title": "Otra Tarea",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [],
+      "created_at": "2025-10-04T19:16:25.870248",
+      "updated_at": "2025-10-04T19:19:13.436398",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "1a13ede4-2692-494e-8957-980cc6fa3424": {
+      "id": "1a13ede4-2692-494e-8957-980cc6fa3424",
+      "title": "Tarea A",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [
+        "37b3f43d-5fee-4ba9-bb93-11f23d30a1a7",
+        "dfda9aa6-5b71-4796-87db-83e1950c07a5"
+      ],
+      "created_at": "2025-10-04T19:21:51.719761",
+      "updated_at": "2025-10-06T20:34:33.202707",
+      "completed": true,
+      "clean": false,
+      "completed_at": "2025-10-06T20:34:33.202705",
+      "cleaned_at": null
+    },
+    "4547f1dc-56af-4c40-91fa-56c3bdc8b551": {
+      "id": "4547f1dc-56af-4c40-91fa-56c3bdc8b551",
+      "title": "Tarea B",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [
+        "2a6e9097-2c62-4633-aa1b-c597d14d12a1",
+        "e5290712-73ed-460c-be8c-e92348fd4fee"
+      ],
+      "created_at": "2025-10-04T19:21:51.719893",
+      "updated_at": "2025-10-04T19:54:35.985171",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "483ab429-5f63-4404-8cb2-08946690f6d5": {
+      "id": "483ab429-5f63-4404-8cb2-08946690f6d5",
+      "title": "Subtarea B1",
+      "description": "",
+      "parent_id": "2a6e9097-2c62-4633-aa1b-c597d14d12a1",
+      "subtasks": [],
+      "created_at": "2025-10-04T19:21:51.720023",
+      "updated_at": "2025-10-04T19:24:17.089562",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "2a6e9097-2c62-4633-aa1b-c597d14d12a1": {
+      "id": "2a6e9097-2c62-4633-aa1b-c597d14d12a1",
+      "title": "Subtarea B2",
+      "description": "",
+      "parent_id": "4547f1dc-56af-4c40-91fa-56c3bdc8b551",
+      "subtasks": [
+        "483ab429-5f63-4404-8cb2-08946690f6d5"
+      ],
+      "created_at": "2025-10-04T19:21:51.720144",
+      "updated_at": "2025-10-04T19:24:17.089549",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "b8cc7dc6-055f-407f-aa2a-5c35244172c8": {
+      "id": "b8cc7dc6-055f-407f-aa2a-5c35244172c8",
+      "title": "Proyecto Grande",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [
+        "d8654bf1-1ee5-4a20-ab08-18334a0b1c14"
+      ],
+      "created_at": "2025-10-04T19:54:35.984533",
+      "updated_at": "2025-10-04T19:54:35.984709",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "d8654bf1-1ee5-4a20-ab08-18334a0b1c14": {
+      "id": "d8654bf1-1ee5-4a20-ab08-18334a0b1c14",
+      "title": "Fase 1",
+      "description": "",
+      "parent_id": "b8cc7dc6-055f-407f-aa2a-5c35244172c8",
+      "subtasks": [
+        "99ab0124-e18e-465c-97fa-5803007c4da0",
+        "53bc1f65-a611-40f4-af2d-1c1916caa099"
+      ],
+      "created_at": "2025-10-04T19:54:35.984704",
+      "updated_at": "2025-10-04T19:54:35.985014",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "99ab0124-e18e-465c-97fa-5803007c4da0": {
+      "id": "99ab0124-e18e-465c-97fa-5803007c4da0",
+      "title": "Tarea A",
+      "description": "",
+      "parent_id": "d8654bf1-1ee5-4a20-ab08-18334a0b1c14",
+      "subtasks": [],
+      "created_at": "2025-10-04T19:54:35.984857",
+      "updated_at": "2025-10-04T19:54:35.984859",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "53bc1f65-a611-40f4-af2d-1c1916caa099": {
+      "id": "53bc1f65-a611-40f4-af2d-1c1916caa099",
+      "title": "Tarea B",
+      "description": "",
+      "parent_id": "d8654bf1-1ee5-4a20-ab08-18334a0b1c14",
+      "subtasks": [],
+      "created_at": "2025-10-04T19:54:35.985011",
+      "updated_at": "2025-10-04T19:54:35.985013",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "e5290712-73ed-460c-be8c-e92348fd4fee": {
+      "id": "e5290712-73ed-460c-be8c-e92348fd4fee",
+      "title": "Subtarea B1",
+      "description": "",
+      "parent_id": "4547f1dc-56af-4c40-91fa-56c3bdc8b551",
+      "subtasks": [],
+      "created_at": "2025-10-04T19:54:35.985167",
+      "updated_at": "2025-10-04T19:54:35.985169",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "ddcbd44a-1e75-49c2-9b50-ae430d1811e8": {
+      "id": "ddcbd44a-1e75-49c2-9b50-ae430d1811e8",
+      "title": "Proyecto Test",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [
+        "29e40334-4cbc-48e2-96ca-f202574091ca"
+      ],
+      "created_at": "2025-10-04T20:20:12.392469",
+      "updated_at": "2025-10-04T20:20:12.392690",
+      "completed": false,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "29e40334-4cbc-48e2-96ca-f202574091ca": {
+      "id": "29e40334-4cbc-48e2-96ca-f202574091ca",
+      "title": "Fase Test",
+      "description": "",
+      "parent_id": "ddcbd44a-1e75-49c2-9b50-ae430d1811e8",
+      "subtasks": [
+        "426201fd-a2cd-41b3-a6f0-14e94554f368",
+        "90291cb7-07ad-4ffb-b45d-4d8dfa6e1b81"
+      ],
+      "created_at": "2025-10-04T20:20:12.392683",
+      "updated_at": "2025-10-04T20:20:12.393086",
+      "completed": false,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "426201fd-a2cd-41b3-a6f0-14e94554f368": {
+      "id": "426201fd-a2cd-41b3-a6f0-14e94554f368",
+      "title": "Tarea Test A",
+      "description": "",
+      "parent_id": "29e40334-4cbc-48e2-96ca-f202574091ca",
+      "subtasks": [],
+      "created_at": "2025-10-04T20:20:12.392878",
+      "updated_at": "2025-10-04T20:20:12.392882",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "90291cb7-07ad-4ffb-b45d-4d8dfa6e1b81": {
+      "id": "90291cb7-07ad-4ffb-b45d-4d8dfa6e1b81",
+      "title": "Tarea Test B",
+      "description": "",
+      "parent_id": "29e40334-4cbc-48e2-96ca-f202574091ca",
+      "subtasks": [],
+      "created_at": "2025-10-04T20:20:12.393081",
+      "updated_at": "2025-10-04T20:20:12.393084",
+      "completed": true,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "973ac947-a50c-401a-8924-649358a66ec2": {
+      "id": "973ac947-a50c-401a-8924-649358a66ec2",
+      "title": "Nueva Tarea Test",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [],
+      "created_at": "2025-10-04T22:43:06.395471",
+      "updated_at": "2025-10-04T22:43:06.395472",
+      "completed": false,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "37b3f43d-5fee-4ba9-bb93-11f23d30a1a7": {
+      "id": "37b3f43d-5fee-4ba9-bb93-11f23d30a1a7",
+      "title": "Nueva Subtarea",
+      "description": "",
+      "parent_id": "1a13ede4-2692-494e-8957-980cc6fa3424",
+      "subtasks": [],
+      "created_at": "2025-10-06T18:55:56.009526",
+      "updated_at": "2025-10-06T20:34:33.202710",
+      "completed": true,
+      "clean": false,
+      "completed_at": "2025-10-06T20:34:33.202709",
+      "cleaned_at": null
+    },
+    "dfda9aa6-5b71-4796-87db-83e1950c07a5": {
+      "id": "dfda9aa6-5b71-4796-87db-83e1950c07a5",
+      "title": "Intentar Subtarea en Clean",
+      "description": "",
+      "parent_id": "1a13ede4-2692-494e-8957-980cc6fa3424",
+      "subtasks": [],
+      "created_at": "2025-10-06T18:56:17.115479",
+      "updated_at": "2025-10-06T20:34:33.203032",
+      "completed": true,
+      "clean": false,
+      "completed_at": "2025-10-06T20:34:33.203030",
+      "cleaned_at": null
+    },
+    "ecad8085-8366-4998-9fcf-b9d5a2c2d148": {
+      "id": "ecad8085-8366-4998-9fcf-b9d5a2c2d148",
+      "title": "Tarea con Descripción Larga",
+      "description": "Esta es una descripción muy larga que debería ser truncada en el formato tabular para que quepa en la columna correspondiente",
+      "parent_id": null,
+      "subtasks": [],
+      "created_at": "2025-10-06T20:34:43.727665",
+      "updated_at": "2025-10-06T20:34:43.727668",
+      "completed": false,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "224dcf33-eb15-4165-9d34-dae97fd9f1ac": {
+      "id": "224dcf33-eb15-4165-9d34-dae97fd9f1ac",
+      "title": "Test Active Task",
+      "description": "",
+      "parent_id": null,
+      "subtasks": [],
+      "created_at": "2025-10-06T20:52:59.591189",
+      "updated_at": "2025-10-06T20:52:59.591191",
+      "completed": false,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    },
+    "0373cebf-9315-4598-92bf-95bfdbc56c42": {
+      "id": "0373cebf-9315-4598-92bf-95bfdbc56c42",
+      "title": "Test Task 1",
+      "description": "First test task",
+      "parent_id": null,
+      "subtasks": [],
+      "created_at": "2025-10-06T21:33:54.158152",
+      "updated_at": "2025-10-06T21:33:54.158154",
+      "completed": false,
+      "clean": false,
+      "completed_at": null,
+      "cleaned_at": null
+    }
+  },
+  "active_tasks": [
+    "224dcf33-eb15-4165-9d34-dae97fd9f1ac"
+  ],
+  "updated_at": "2025-10-06T21:33:54.158165"
+}

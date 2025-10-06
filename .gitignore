@@ -166,4 +166,4 @@ cython_debug/
 *.local
 
 # Project-specific ignores
-.arrangit.json
+.planit/

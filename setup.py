@@ -2,16 +2,16 @@ from setuptools import setup, find_packages
 import os
 
 setup(
-    name="arrangit",
+    name="planit",
     version="1.0.0",
     description="Git project task manager - Organize and manage your tasks directly from your Git repository",
     long_description=open("README.md").read() if os.path.exists("README.md") else "",
     long_description_content_type="text/markdown",
-    packages=['arrangit'],
+    packages=['planit'],
     install_requires=[],
     entry_points={
         "console_scripts": [
-            "arrangit=arrangit.cli:main",
+            "planit=planit.cli:main",
         ],
     },
     author="atp",

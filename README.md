@@ -1,13 +1,13 @@
-# Arrangit - Project Task Manager
+# Planit - Project Task Manager
 
-A simple task manager for projects that stores all information in `.arrangit.json`.
+A simple task manager for projects that stores all information in `.planit/db.json`.
 
 ## Installation
 
 1. Clone or copy the project
-2. Make sure the `arrangit` script is executable:
+2. Make sure the `planit` script is executable:
    ```bash
-   chmod +x arrangit
+   chmod +x planit
    ```
 
 ## Autocompletion Setup
@@ -22,33 +22,33 @@ source /full/path/to/arrangit/completions.sh
 
 ### Available Commands
 
-- `./arrangit list` - List all tasks
-- `./arrangit task "name"` - Create or select task
-- `./arrangit subtask "name"` - Create or select subtask
-- `./arrangit active` - Show active task
-- `./arrangit done "name"` - Mark task as completed
-- `./arrangit delete "name"` - Delete task
+- `./planit list` - List all tasks
+- `./planit task "name"` - Create or select task
+- `./planit subtask "name"` - Create or select subtask
+- `./planit active` - Show active task
+- `./planit done "name"` - Mark task as completed
+- `./planit delete "name"` - Delete task
 
 ### Examples
 
 ```bash
 # Create a new task
-./arrangit task "Develop API" -d "Create user endpoints"
+./planit task "Develop API" -d "Create user endpoints"
 
 # Create a subtask (you'll select the parent task)
-./arrangit subtask "Authentication"
+./planit subtask "Authentication"
 
 # Mark task as completed
-./arrangit done "Develop API"
+./planit done "Develop API"
 
 # Delete task
-./arrangit delete "Old task"
+./planit delete "Old task"
 
 # View active task
-./arrangit active
+./planit active
 
 # List all tasks
-./arrangit list
+./planit list
 ```
 
 ## Features
@@ -57,12 +57,12 @@ source /full/path/to/arrangit/completions.sh
 - **Autocompletion**: Use TAB to complete task names
 - **Subtasks**: Create task hierarchies
 - **Active task**: Always have an active task to work on
-- **Persistence**: Everything is automatically saved in `.arrangit.json`
+- **Persistence**: Everything is automatically saved in `.planit/db.json`
 
 ## File Structure
 
 - `src/` - Program source code
-- `.arrangit.json` - Task database
-- `arrangit` - Main script
+- `.planit/db.json` - Task database
+- `planit` - Main script
 - `completions.sh` - Autocompletion script
 

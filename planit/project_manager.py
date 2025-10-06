@@ -7,7 +7,8 @@ from .task import Task
 class ProjectManager:
     def __init__(self, project_path: str = "."):
         self.project_path = project_path
-        self.config_file = os.path.join(project_path, ".arrangit.json")
+        self.config_dir = os.path.join(project_path, ".planit")
+        self.config_file = os.path.join(self.config_dir, "db.json")
         self.tasks: Dict[str, Task] = {}
         self.active_tasks: List[str] = []
         
@@ -18,8 +19,11 @@ class ProjectManager:
         if os.path.exists(self.config_file):
             raise FileExistsError(f"File {self.config_file} already exists")
         
+        # Create .planit directory if it doesn't exist
+        os.makedirs(self.config_dir, exist_ok=True)
+        
         data = {
-            "project_name": "arrangit",
+            "project_name": "planit",
             "tasks": {},
             "active_tasks": [],
             "created_at": __import__("datetime").datetime.now().isoformat()
@@ -51,7 +55,7 @@ class ProjectManager:
 
     def save_project(self):
         data = {
-            "project_name": "arrangit",
+            "project_name": "planit",
             "tasks": {task_id: task.to_dict() for task_id, task in self.tasks.items()},
             "active_tasks": self.active_tasks,
             "updated_at": __import__("datetime").datetime.now().isoformat()
