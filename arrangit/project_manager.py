@@ -65,7 +65,10 @@ class ProjectManager:
         self.tasks[task.id] = task
         
         if parent_id and parent_id in self.tasks:
-            self.tasks[parent_id].add_subtask(task.id)
+            parent_task = self.tasks[parent_id]
+            if parent_task.clean:
+                raise ValueError("Cannot add subtasks to clean tasks")
+            parent_task.add_subtask(task.id)
         
         self.save_project()
         return task.id
@@ -73,6 +76,10 @@ class ProjectManager:
     def add_active_task(self, task_id: str):
         if task_id not in self.tasks:
             raise ValueError(f"Task with ID {task_id} not found")
+        
+        task = self.tasks[task_id]
+        if task.clean:
+            raise ValueError("Cannot activate clean tasks")
         
         if task_id not in self.active_tasks:
             self.active_tasks.append(task_id)
@@ -87,7 +94,7 @@ class ProjectManager:
         return [self.tasks[task_id] for task_id in self.active_tasks if task_id in self.tasks]
 
     def get_inactive_tasks(self) -> List[Task]:
-        return [task for task in self.tasks.values() if task.id not in self.active_tasks and not task.completed]
+        return [task for task in self.tasks.values() if task.id not in self.active_tasks and not task.completed and not task.clean]
 
     def get_active_tasks_hierarchically(self) -> List[tuple[Task, int]]:
         """Get active tasks with their hierarchical structure including parent tasks"""
@@ -97,7 +104,7 @@ class ProjectManager:
         def add_task_and_parents(task_id: str):
             """Add task and all its parents to relevant_tasks"""
             task = self.get_task(task_id)
-            if task and task.id not in relevant_tasks:
+            if task and task.id not in relevant_tasks and not task.clean:
                 relevant_tasks.add(task.id)
                 if task.parent_id:
                     add_task_and_parents(task.parent_id)
@@ -135,8 +142,8 @@ class ProjectManager:
         result = []
         
         for task, level in hierarchical_tasks:
-            # Task can be taken if it's not completed and not already active
-            can_take = not task.completed and task.id not in self.active_tasks
+            # Task can be taken if it's not completed, not clean, and not already active
+            can_take = not task.completed and not task.clean and task.id not in self.active_tasks
             result.append((task, level, can_take))
         
         return result
@@ -149,8 +156,8 @@ class ProjectManager:
         result = []
         
         for task, level in hierarchical_tasks:
-            # Task can be untaken if it's currently active
-            can_untake = task.id in self.active_tasks
+            # Task can be untaken if it's currently active and not clean
+            can_untake = task.id in self.active_tasks and not task.clean
             result.append((task, level, can_untake))
         
         return result
@@ -161,7 +168,7 @@ class ProjectManager:
         result = []
         
         for task, level in hierarchical_tasks:
-            if task.completed:
+            if task.completed and not task.clean:
                 result.append((task, level))
         
         return result
@@ -183,10 +190,10 @@ class ProjectManager:
         return matches
 
     def get_incomplete_tasks(self) -> List[Task]:
-        return [task for task in self.tasks.values() if not task.completed]
+        return [task for task in self.tasks.values() if not task.completed and not task.clean]
 
     def get_completed_tasks(self) -> List[Task]:
-        return [task for task in self.tasks.values() if task.completed]
+        return [task for task in self.tasks.values() if task.completed and not task.clean]
 
     def get_all_tasks(self) -> List[Task]:
         return list(self.tasks.values())
@@ -198,12 +205,39 @@ class ProjectManager:
         
         return [self.tasks[subtask_id] for subtask_id in parent.subtasks if subtask_id in self.tasks]
 
-    def get_tasks_hierarchically(self, show_completed: bool = False, show_all: bool = False) -> List[tuple[Task, int]]:
+    def _get_min_linux_date(self) -> str:
+        """Returns the minimum possible date in Linux (Unix epoch)"""
+        return __import__("datetime").datetime(1970, 1, 1, 0, 0, 0).isoformat()
+
+    def _get_task_priority(self, task: Task) -> tuple:
+        """Get priority tuple for sorting: (priority_category, date_priority)"""
+        # Priority categories: 0=taken, 1=undone, 2=done, 3=clean
+        if task.id in self.active_tasks:
+            priority_category = 0
+        elif task.clean:
+            priority_category = 3
+        elif task.completed:
+            priority_category = 2
+        else:
+            priority_category = 1
+        
+        # Date priority: clean_date > completed_date > created_date
+        date_priority = (
+            task.cleaned_at or 
+            task.completed_at or 
+            task.created_at or 
+            self._get_min_linux_date()
+        )
+        
+        return (priority_category, date_priority)
+
+    def get_tasks_hierarchically(self, show_completed: bool = False, show_all: bool = False, show_clean: bool = False) -> List[tuple[Task, int]]:
         """Get tasks in hierarchical order (parent tasks first, then subtasks)
         
         Args:
             show_completed: If True, show structure with completed tasks highlighted
             show_all: If True, show all tasks regardless of completion status
+            show_clean: If True, show clean tasks (default: False)
         """
         # Always start with all root tasks to maintain structure
         root_tasks = [task for task in self.tasks.values() if not task.parent_id]
@@ -211,6 +245,10 @@ class ProjectManager:
         all_tasks = []
         
         def add_task_and_subtasks(task: Task, level: int = 0):
+            # Skip clean tasks unless explicitly requested
+            if not show_clean and task.clean:
+                return
+                
             # For show_completed mode, only add tasks that are completed or have completed descendants
             if show_completed:
                 # Check if this task or any of its descendants are completed
@@ -239,11 +277,14 @@ class ProjectManager:
         for root_task in root_tasks:
             add_task_and_subtasks(root_task)
         
+        # Sort tasks by priority
+        all_tasks.sort(key=lambda x: self._get_task_priority(x[0]))
+        
         return all_tasks
 
     def complete_task(self, task_id: str):
         if task_id in self.tasks:
-            self.tasks[task_id].completed = True
+            self.tasks[task_id].mark_completed()
             
             # Remove from active tasks
             if task_id in self.active_tasks:
@@ -258,7 +299,7 @@ class ProjectManager:
 
     def uncomplete_task(self, task_id: str):
         if task_id in self.tasks:
-            self.tasks[task_id].completed = False
+            self.tasks[task_id].mark_uncompleted()
             
             # Mark all subtasks as uncompleted recursively
             for subtask_id in self.tasks[task_id].subtasks:
@@ -283,6 +324,34 @@ class ProjectManager:
                 self.active_tasks.remove(task_id)
             
             del self.tasks[task_id]
+            self.save_project()
+
+    def clean_task(self, task_id: str):
+        """Mark a task and all its subtasks as clean"""
+        if task_id in self.tasks:
+            self.tasks[task_id].mark_clean()
+            
+            # Remove from active tasks
+            if task_id in self.active_tasks:
+                self.active_tasks.remove(task_id)
+            
+            # Mark all subtasks as clean recursively
+            for subtask_id in self.tasks[task_id].subtasks:
+                if subtask_id in self.tasks:
+                    self.clean_task(subtask_id)
+            
+            self.save_project()
+
+    def unclean_task(self, task_id: str):
+        """Mark a task and all its subtasks as unclean"""
+        if task_id in self.tasks:
+            self.tasks[task_id].mark_unclean()
+            
+            # Mark all subtasks as unclean recursively
+            for subtask_id in self.tasks[task_id].subtasks:
+                if subtask_id in self.tasks:
+                    self.unclean_task(subtask_id)
+            
             self.save_project()
 
     def move_task(self, task_id: str, new_parent_id: Optional[str] = None):
@@ -314,6 +383,11 @@ class ProjectManager:
             
             if is_descendant(task_id, new_parent_id):
                 raise ValueError("Cannot move task to its own descendant")
+            
+            # Check if parent is clean
+            parent_task = self.tasks[new_parent_id]
+            if parent_task.clean:
+                raise ValueError("Cannot move task to clean parent")
         
         # Remove from current parent
         if task.parent_id and task.parent_id in self.tasks:

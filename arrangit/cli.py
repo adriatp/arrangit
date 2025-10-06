@@ -14,13 +14,14 @@ def main():
     list_parser.add_argument('--done', action='store_true', help='Show only completed tasks')
     list_parser.add_argument('--undone', action='store_true', help='Show only incomplete tasks')
     list_parser.add_argument('--active', action='store_true', help='Show only active tasks')
+    list_parser.add_argument('--clean', action='store_true', help='Show only clean tasks')
+    list_parser.add_argument('--unclean', action='store_true', help='Show only non-clean tasks')
+    list_parser.add_argument('--all', action='store_true', help='Show all tasks including clean')
+    list_parser.add_argument('--full', action='store_true', help='Show detailed tabular output')
     
     task_parser = subparsers.add_parser('task', help='Create or select task')
     task_parser.add_argument('name', help='Task name')
     task_parser.add_argument('-d', '--description', help='Task description', default='')
-
-    subtask_parser = subparsers.add_parser('subtask', help='Create or select subtask')
-    subtask_parser.add_argument('name', help='Subtask name')
 
     subparsers.add_parser('active', help='Show active task')
 
@@ -35,6 +36,12 @@ def main():
 
     undone_parser = subparsers.add_parser('undone', help='Mark task as not completed')
     undone_parser.add_argument('name', nargs='?', help='Task name (optional)')
+
+    clean_parser = subparsers.add_parser('clean', help='Mark task as clean')
+    clean_parser.add_argument('name', nargs='?', help='Task name (optional)')
+
+    unclean_parser = subparsers.add_parser('unclean', help='Mark task as not clean')
+    unclean_parser.add_argument('name', nargs='?', help='Task name (optional)')
 
     take_parser = subparsers.add_parser('take', help='Activate a task')
     take_parser.add_argument('name', nargs='?', help='Task name to activate (optional)')
@@ -68,10 +75,25 @@ def main():
             elif args.active:
                 hierarchical_tasks = manager.get_active_tasks_hierarchically()
                 title = "Active tasks"
-            else:
-                # Default: show all tasks
+            elif args.clean:
+                hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True, show_clean=True)
+                # Filter to only show clean tasks
+                hierarchical_tasks = [(task, level) for task, level in hierarchical_tasks if task.clean]
+                title = "Clean tasks"
+            elif args.unclean:
                 hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True)
+                # Filter to only show non-clean tasks
+                hierarchical_tasks = [(task, level) for task, level in hierarchical_tasks if not task.clean]
+                title = "Non-clean tasks"
+            elif args.all:
+                hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True, show_clean=True)
                 title = "All tasks"
+            else:
+                # Default: show all non-clean tasks (same as --unclean)
+                hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True)
+                # Filter to only show non-clean tasks
+                hierarchical_tasks = [(task, level) for task, level in hierarchical_tasks if not task.clean]
+                title = "Tasks"
             
             if not hierarchical_tasks:
                 if args.done:
@@ -80,22 +102,66 @@ def main():
                     print("No incomplete tasks in the project")
                 elif args.active:
                     print("No active tasks in the project")
+                elif args.clean:
+                    print("No clean tasks in the project")
+                elif args.unclean:
+                    print("No non-clean tasks in the project")
                 else:
                     print("No tasks in the project")
                 return
 
-            print(f"\n{title}:")
-            print("-" * 50)
-            
-            for task, level in hierarchical_tasks:
-                if task.id in manager.active_tasks:
-                    status = "*"
-                else:
-                    status = "✓" if task.completed else "◯"
-                indent = "  " * level
-                print(f"  {status} {indent}{task.title} [{task.id[:8]}]")
-                if task.description:
-                    print(f"     {indent}{task.description}")
+            if args.full:
+                # Tabular format with columns
+                print(f"\n{title}:")
+                print("-" * 120)
+                
+                # Print header
+                print(f"{'':<2} {'':<1} {'Description':<70} {'Created':<12} {'Completed':<12} {'Cleaned':<12}")
+                print("-" * 120)
+                
+                for task, level in hierarchical_tasks:
+                    if task.id in manager.active_tasks:
+                        status = "*"
+                    elif task.clean:
+                        status = "C"
+                    else:
+                        status = "✓" if task.completed else "◯"
+                    
+                    # Format dates
+                    created_date = task.created_at[:10] if task.created_at else "-"
+                    completed_date = task.completed_at[:10] if task.completed_at else "-"
+                    cleaned_date = task.cleaned_at[:10] if task.cleaned_at else "-"
+                    
+                    # Create combined description with title and description
+                    indent = "  " * level
+                    combined_desc = f"{indent}{task.title}"
+                    if task.description:
+                        combined_desc += f": {task.description}"
+                    
+                    # Truncate if too long
+                    if len(combined_desc) > 70:
+                        combined_desc = combined_desc[:67] + "..."
+                    
+                    print(f"{'':<2} {status:<1} {combined_desc:<70} {created_date:<12} {completed_date:<12} {cleaned_date:<12}")
+            else:
+                # Default format
+                print(f"\n{title}:")
+                print("-" * 50)
+                
+                for task, level in hierarchical_tasks:
+                    if task.id in manager.active_tasks:
+                        status = "*"
+                    elif task.clean:
+                        status = "C"
+                    else:
+                        status = "✓" if task.completed else "◯"
+                    indent = "  " * level
+                    
+                    # Show creation date instead of ID
+                    created_date = task.created_at[:10] if task.created_at else "-"
+                    print(f"  {status} {indent}{task.title} [{created_date}]")
+                    if task.description:
+                        print(f"     {indent}{task.description}")
 
         elif args.command == 'task':
             existing_task = manager.find_task_by_name(args.name)
@@ -104,24 +170,12 @@ def main():
                 manager.add_active_task(existing_task.id)
                 print(f"Task activated: {existing_task.title}")
             else:
-                task_id = manager.create_task(args.name, args.description)
-                print(f"Task created: {args.name}")
-
-        elif args.command == 'subtask':
-            existing_task = manager.find_task_by_name(args.name)
-            
-            if existing_task:
-                manager.add_active_task(existing_task.id)
-                print(f"Subtask activated: {existing_task.title}")
-            else:
                 hierarchical_tasks = manager.get_tasks_hierarchically()
                 
-                if not hierarchical_tasks:
-                    print("No tasks available to create subtasks")
-                    return
-                
-                print("\nAvailable tasks for subtask:")
+                print("\nSelect parent task (0 for root level):")
                 print("-" * 50)
+                print("0. Root level (no parent)")
+                
                 for i, (task, level) in enumerate(hierarchical_tasks, 1):
                     if task.id in manager.active_tasks:
                         status = "*"
@@ -132,11 +186,15 @@ def main():
                 
                 try:
                     choice = input("\nSelect the parent task number: ")
-                    parent_index = int(choice) - 1
+                    parent_index = int(choice)
                     
-                    if 0 <= parent_index < len(hierarchical_tasks):
-                        parent_task, _ = hierarchical_tasks[parent_index]
-                        task_id = manager.create_task(args.name, "", parent_task.id)
+                    if parent_index == 0:
+                        # Create root task
+                        task_id = manager.create_task(args.name, args.description)
+                        print(f"Task created: {args.name}")
+                    elif 1 <= parent_index <= len(hierarchical_tasks):
+                        parent_task, _ = hierarchical_tasks[parent_index - 1]
+                        task_id = manager.create_task(args.name, args.description, parent_task.id)
                         print(f"Subtask created: {args.name} (of {parent_task.title})")
                     else:
                         print("Invalid selection")
@@ -367,12 +425,90 @@ def main():
                 except (ValueError, KeyboardInterrupt):
                     print("\nOperation cancelled")
 
+        elif args.command == 'clean':
+            if args.name:
+                task = manager.find_task_by_name(args.name)
+                if task:
+                    manager.clean_task(task.id)
+                    print(f"Task marked as clean: {task.title}")
+                else:
+                    print(f"Task '{args.name}' not found")
+            else:
+                hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True)
+                if not hierarchical_tasks:
+                    print("No tasks in the project")
+                    return
+
+                print("\nAvailable tasks to mark as clean:")
+                print("-" * 50)
+                
+                for i, (task, level) in enumerate(hierarchical_tasks, 1):
+                    if task.id in manager.active_tasks:
+                        status = "*"
+                    else:
+                        status = "✓" if task.completed else "◯"
+                    indent = "  " * level
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
+                
+                try:
+                    choice = input("\nSelect the task number to mark as clean: ")
+                    task_index = int(choice) - 1
+                    
+                    if 0 <= task_index < len(hierarchical_tasks):
+                        task, _ = hierarchical_tasks[task_index]
+                        manager.clean_task(task.id)
+                        print(f"Task marked as clean: {task.title}")
+                    else:
+                        print("Invalid selection")
+                except (ValueError, KeyboardInterrupt):
+                    print("\nOperation cancelled")
+
+        elif args.command == 'unclean':
+            if args.name:
+                task = manager.find_task_by_name(args.name)
+                if task:
+                    manager.unclean_task(task.id)
+                    print(f"Task marked as not clean: {task.title}")
+                else:
+                    print(f"Task '{args.name}' not found")
+            else:
+                hierarchical_tasks = manager.get_tasks_hierarchically(show_all=True, show_clean=True)
+                if not hierarchical_tasks:
+                    print("No clean tasks in the project")
+                    return
+
+                print("\nAvailable tasks to mark as not clean:")
+                print("-" * 50)
+                
+                for i, (task, level) in enumerate(hierarchical_tasks, 1):
+                    if task.id in manager.active_tasks:
+                        status = "*"
+                    else:
+                        status = "✓" if task.completed else "◯"
+                    indent = "  " * level
+                    print(f"{i}.  {status} {indent}{task.title} [{task.id[:8]}]")
+                
+                try:
+                    choice = input("\nSelect the task number to mark as not clean: ")
+                    task_index = int(choice) - 1
+                    
+                    if 0 <= task_index < len(hierarchical_tasks):
+                        task, _ = hierarchical_tasks[task_index]
+                        manager.unclean_task(task.id)
+                        print(f"Task marked as not clean: {task.title}")
+                    else:
+                        print("Invalid selection")
+                except (ValueError, KeyboardInterrupt):
+                    print("\nOperation cancelled")
+
         elif args.command == 'take':
             if args.name:
                 task = manager.find_task_by_name(args.name)
                 if task:
                     if task.completed:
                         print(f"Cannot activate completed task: {task.title}")
+                    elif task.clean:
+                        print(f"Cannot activate clean task: {task.title}")
                     else:
                         manager.add_active_task(task.id)
                         print(f"Task activated: {task.title}")
